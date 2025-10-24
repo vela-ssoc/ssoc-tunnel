@@ -2,6 +2,7 @@ package tunnel_test
 
 import (
 	"context"
+	"encoding/json"
 	"net"
 	"net/http"
 	"net/url"
@@ -13,11 +14,23 @@ import (
 const brokerInternalHost = "broker.ssoc.internal"
 
 func TestExample(t *testing.T) {
+	// 读取隐写数据
+	hide := new(hideConfig)
+	selfExe := "example_steganoed_program" // 此程序为示例数据，实际环境请替换成程序自身。
+	if err := tunnel.ReadManifest(selfExe, hide); err != nil {
+		t.Errorf("读取隐写数据出错: %v", err)
+		return
+	}
+
+	t.Logf("隐写数据读取成功：%s", hide)
+
 	ctx := context.Background()
 	cfg := tunnel.Config{
-		Addresses: []string{"127.0.0.1:8082"}, // broker 地址必须填写。
-		Semver:    "1.0.0-alpha",              // 版本号必须填写
-		Unload:    false,                      // 是否开启静默模式，仅在新注册节点时有效
+		Addresses:  hide.Addresses, // broker 地址必须填写。
+		Semver:     hide.Semver,    // 版本号必须填写
+		Unload:     hide.Unload,    // 是否开启静默模式，仅在新注册节点时有效
+		Customized: hide.Customized,
+		// ... 其它字段不再一一列举
 	}
 
 	opt := tunnel.NewOption().
@@ -85,4 +98,18 @@ func newHTTPClient(mux tunnel.Muxer) *http.Client {
 			},
 		},
 	}
+}
+
+type hideConfig struct {
+	Addresses  []string `json:"addresses"`
+	Semver     string   `json:"semver"`
+	Unload     bool     `json:"unload"`
+	Unstable   bool     `json:"unstable"`
+	Customized string   `json:"customized"`
+	// ... 其它字段不再一一列举，需要和隐写端商量好
+}
+
+func (hc hideConfig) String() string {
+	dat, _ := json.Marshal(hc)
+	return string(dat)
 }
