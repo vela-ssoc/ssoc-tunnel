@@ -14,9 +14,15 @@ import (
 const brokerInternalHost = "broker.ssoc.internal"
 
 func TestExample(t *testing.T) {
+	// 此文件已被隐写了数据，实际环境请替换成程序自身，如 os.Args[0]。
+	//
+	// 若要查看隐写内容请执行：
+	//      windows: tar xf ./example_steganoed_program.png
+	// linux, macos: unzip ./example_steganoed_program.png
+	selfExe := "example_steganoed_program.png"
+
 	// 读取隐写数据
 	hide := new(hideConfig)
-	selfExe := "example_steganoed_program" // 此程序为示例数据，实际环境请替换成程序自身。
 	if err := tunnel.ReadManifest(selfExe, hide); err != nil {
 		t.Errorf("读取隐写数据出错: %v", err)
 		return
