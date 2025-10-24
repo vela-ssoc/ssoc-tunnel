@@ -160,7 +160,7 @@ func (mc *muxerClient) connects(addrs []string, timeout time.Duration) (*smux.Se
 		if mc.rebuild {
 			if !mc.remind {
 				mc.remind = true
-				mc.log().Error("重新生成机器码后认证依然提示重复上线，请检查本机是否已经运行了 agent 程序，如果不存在请联系管理员处理。")
+				mc.log().Error("重新生成机器码后认证依然提示重复上线，请检查本机是否已经运行了 agent 程序，如果未运行请联系管理员处理。")
 			}
 			continue
 		}
