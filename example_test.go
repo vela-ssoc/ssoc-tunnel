@@ -8,17 +8,14 @@ import (
 	"net/url"
 	"testing"
 
-	tunnel "github.com/vela-ssoc/ssoc-tunnel"
+	"github.com/vela-ssoc/ssoc-tunnel"
 )
 
 const brokerInternalHost = "broker.ssoc.internal"
 
 func TestExample(t *testing.T) {
 	// 此文件已被隐写了数据，实际环境请替换成程序自身，如 os.Args[0]。
-	//
-	// 若要查看隐写内容请执行：
-	//      windows: tar xf ./example_steganoed_program.png
-	// linux, macos: unzip ./example_steganoed_program.png
+	// selfExe := os.Args[0]
 	selfExe := "example_steganoed_program.png"
 
 	// 读取隐写数据
@@ -27,7 +24,6 @@ func TestExample(t *testing.T) {
 		t.Errorf("读取隐写数据出错: %v", err)
 		return
 	}
-
 	t.Logf("隐写数据读取成功：%s", hide)
 
 	ctx := context.Background()
