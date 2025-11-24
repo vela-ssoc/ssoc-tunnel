@@ -1,12 +1,17 @@
 package tunnel_test
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
+	"io"
+	"log/slog"
 	"net"
 	"net/http"
 	"net/url"
 	"testing"
+	"time"
 
 	"github.com/vela-ssoc/ssoc-tunnel"
 )
@@ -67,7 +72,16 @@ func TestExample(t *testing.T) {
 		}
 	}
 
-	select {}
+	uploadWriter := newUploadWriter(httpCli)
+	handler := slog.NewJSONHandler(uploadWriter, &slog.HandlerOptions{Level: slog.LevelDebug})
+	hlog := slog.New(handler)
+
+	ticker := time.NewTicker(5 * time.Second)
+	defer ticker.Stop()
+
+	for at := range ticker.C {
+		hlog.Info("现在时间是：" + at.String())
+	}
 }
 
 func myHTTPServer() *http.Server {
@@ -114,4 +128,47 @@ type hideConfig struct {
 func (hc hideConfig) String() string {
 	dat, _ := json.Marshal(hc)
 	return string(dat)
+}
+
+func newUploadWriter(cli *http.Client) io.Writer {
+	return &consoleLog{cli: cli}
+}
+
+type consoleLog struct {
+	cli *http.Client
+}
+
+func (cl *consoleLog) Write(p []byte) (int, error) {
+	n := len(p)
+	if n == 0 {
+		return n, nil
+	}
+	data := &consoleData{Content: string(p)}
+	buf := new(bytes.Buffer)
+	if err := json.NewEncoder(buf).Encode(data); err != nil {
+		return 0, err
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	reqURL := internalURL("/api/v1/console/write")
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, reqURL.String(), buf)
+	if err != nil {
+		return n, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := cl.cli.Do(req)
+	if err != nil {
+		return 0, err
+	}
+	fmt.Printf("上报结果: %d\n", resp.StatusCode)
+	_ = resp.Body.Close()
+
+	return n, nil
+}
+
+type consoleData struct {
+	Content string `json:"content"`
 }
